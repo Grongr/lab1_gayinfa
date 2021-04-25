@@ -25,7 +25,7 @@ class Trajectory(object):
     EARTH_RADIUS     = 6378.137
 
     def __init__(self, coords = (55.93013, 37.51832, 0.2), link='https://celestrak.com/NORAD/elements/active.txt', sat = "NOAA 19                 "):
-        """ Initialisation of this class. Tle transcriotion and coords transformation """
+        """ Initialisation of this class. Tle transcription and coords transformation """
         self.lat, self.lon, self.height = coords
         self.object_distance = self.EARTH_RADIUS + self.height
 
@@ -169,6 +169,7 @@ class Trajectory(object):
                 _times  = []
 
     def plot_some_sh___images(self):
+        """ Plot and log results """
         with open('log.txt', 'w') as f:
             for i, value in enumerate(self.times):
                 f.write(str(value))
