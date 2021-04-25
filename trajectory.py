@@ -73,13 +73,13 @@ class Trajectory(object):
         self.current_time = self.start_time
 
     def calculate_the_orbit(self):
-        """Calculates the orbit of spaceship"""
+        """Converting into decard coords and calculates the orbit of spaceship"""
 
         thetas = []
         phies  = []
         times  = []
         while self.current_time != self.finish_time:
-            orb = Orbital("NONO", line1=self.tle[1], line2=self.tle[2])
+            orb = Orbital("N", line1=self.tle[1], line2=self.tle[2])
             lon, lat, alt = orb.get_lonlatalt(self.current_time) 
             lon, lat = radians(lon), radians(lat)
             r = alt + self.EARTH_RADIUS
@@ -100,23 +100,24 @@ class Trajectory(object):
             dist_to_sat = dist_to_sat ** 0.5
 
             theta = asin(dist_to_fl / dist_to_sat)
+            theta = degrees(theta)
             phi   = 0
 
             if theta >= 0:
                 norm_x = norm_y = 0
                 norm_z = lk / self.z
 
-                norm_vec = ( norm_x - self.x, norm_y - self.y, norm_z - self.z )
+                norm_vec = [ norm_x - self.x, norm_y - self.y, norm_z - self.z ]
 
                 norm_vec_len = norm_vec[0] ** 2 + norm_vec[1] ** 2 + norm_vec[2] ** 2
                 norm_vec_len = norm_vec_len ** 0.5
 
-                k = ( lk + sk ) / lk
+                k = ( lk - sk ) / lk
                 p_x = x + k * self.x
                 p_y = y + k * self.y
                 p_z = z + k * self.z
 
-                p_vec = ( p_x - self.x, p_y - self.y, p_z - self.z )
+                p_vec = [ p_x - self.x, p_y - self.y, p_z - self.z ]
                 p_vec_len = p_vec[0] ** 2 + p_vec[1] ** 2 + p_vec[2] ** 2
                 p_vec_len = p_vec_len ** 0.5
 
@@ -126,10 +127,11 @@ class Trajectory(object):
                 phi = degrees( phi )
                 
                 est_vec = ( norm_vec[1] * self.z - norm_vec[2] * self.y,
-                           norm_vec[2] * self.x - norm_vec[0] * self.z,
-                           norm_vec[0] * self.y - norm_vec[1] * self.x ) 
+                            norm_vec[2] * self.x - norm_vec[0] * self.z,
+                            norm_vec[0] * self.y - norm_vec[1] * self.x ) 
 
-                est_vec_len = sum(list(map(lambda x: x**2, est_vec)))
+                est_vec_len = est_vec[0] ** 2 + est_vec[1] ** 2 + est_vec[2] ** 2
+                est_vec_len = est_vec_len ** 0.5
                 
                 phi1 = p_vec[0] * est_vec[0] + est_vec[1] * p_vec[1] + est_vec[2] * p_vec[2]
 
@@ -142,8 +144,8 @@ class Trajectory(object):
             thetas.append(theta)
             phies.append(phi)
             times.append(self.current_time + timedelta(hours=1))
-            self.needed_elevation_azimuth(thetas, phies, times)
             self.current_time += timedelta(minutes=1)
+        self.needed_elevation_azimuth(thetas, phies, times)
             
 
     def needed_elevation_azimuth(self, thetas, phies, times):
@@ -154,7 +156,7 @@ class Trajectory(object):
 
         for i, value in enumerate(thetas):
             if value >= 0:
-                _thetas.append(value)
+                _thetas.append( value )
                 _phies.append( radians(phies[i]) )
                 _times.append( times[i] )
             else:
@@ -167,11 +169,11 @@ class Trajectory(object):
                 _times  = []
 
     def plot_some_sh___images(self):
-        for i, value in enumerate(self.times):
-            print(value, end=' ')
-            print('Azimuth: ', str(degrees(self.phies[i][0]))[:-12] + 'gr', end=' ')
-            print('Max elevation', str(max(self.thetas[i]))[:-12] + 'gr.')
-            print()
+        with open('log.txt', 'w') as f:
+            for i, value in enumerate(self.times):
+                f.write(str(value))
+                f.write('Azimuth: ' + str(degrees(self.phies[i][0]))[:-12] + 'gr ')
+                f.write('Max elevation' + str(max(self.thetas[i]))[:-12] + 'gr.\n')
 
         fig1 = plt.figure()
         ax   = fig1.add_subplot(111, projection='3d')
